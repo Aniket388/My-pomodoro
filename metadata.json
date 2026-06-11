@@ -1,0 +1,6 @@
+{
+  "name": "Pomodoro Focus",
+  "description": "Premium modern Pomodoro timer with 3D background.",
+  "requestFramePermissions": ["notifications"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
