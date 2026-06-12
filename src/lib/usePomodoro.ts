@@ -22,36 +22,29 @@ export const DURATIONS = {
 let audioCtx: AudioContext | null = null;
 
 const playSubtleChime = () => {
-  try {
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    }
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
-
-    const osc = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-
-    osc.type = "sine";
-    // Uses your exact original working tone frequencies
-    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // Base tone
-    osc.frequency.exponentialRampToValueAtTime(1046.50, audioCtx.currentTime + 0.5); // Pitch slide up
-
-    // LINEAR FIX: Keeps the audio loud and sustained for 2.5 seconds instead of dropping instantly
-    gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.1);  // Quick fade in to full volume
-    gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 2.5);  // HOLD the volume high and steady
-    gainNode.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 3.0); // Smooth fade out at the very end
-
-    osc.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-
-    osc.start();
-    osc.stop(audioCtx.currentTime + 3.0); // Let the note ring on the hardware thread for 3 full seconds
-  } catch (error) {
-    console.warn("Audio context playback was throttled", error);
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
   }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+
+  const osc = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+  osc.frequency.exponentialRampToValueAtTime(1046.50, audioCtx.currentTime + 0.5); // C6
+
+  gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+  gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.1);
+  gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 2);
+
+  osc.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+
+  osc.start();
+  osc.stop(audioCtx.currentTime + 2);
 };
 
 const playToggleSound = (enabled: boolean) => {
