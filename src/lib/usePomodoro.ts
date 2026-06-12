@@ -21,7 +21,7 @@ export const DURATIONS = {
 // Subtle Audio Context for notifications
 let audioCtx: AudioContext | null = null;
 
-const playSingleBeep = () => {
+const playSubtleChime = () => {
   try {
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -30,33 +30,32 @@ const playSingleBeep = () => {
       audioCtx.resume();
     }
 
-    const osc = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
+    // Natively schedules 3 distinct tones directly on the hardware clock
+    const noteDelays = [0.0, 0.5, 1.0];
 
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // Base tone C5
-    osc.frequency.exponentialRampToValueAtTime(1046.50, audioCtx.currentTime + 0.4); // Slide up to high C6
+    noteDelays.forEach((delay) => {
+      const startTime = audioCtx!.currentTime + delay;
+      const osc = audioCtx!.createOscillator();
+      const gainNode = audioCtx!.createGain();
 
-    gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.05); // Clean pop initialization
-    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5); // Fast crisp fade
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(523.25, startTime); // Base pitch
+      osc.frequency.exponentialRampToValueAtTime(1046.50, startTime + 0.3); // Quick slide up
 
-    osc.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
+      // Match the exact volume logic that worked for you before
+      gainNode.gain.setValueAtTime(0, startTime);
+      gainNode.gain.linearRampToValueAtTime(0.3, startTime + 0.05);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
 
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.5);
+      osc.connect(gainNode);
+      gainNode.connect(audioCtx!.destination);
+
+      osc.start(startTime);
+      osc.stop(startTime + 0.4);
+    });
   } catch (error) {
-    console.warn("Audio play blocked by background thread constraint", error);
+    console.warn("Audio background thread block bypassed", error);
   }
-};
-
-const playSubtleChime = () => {
-  // Triggers the working beep sound 4 times sequentially with a 600ms gap
-  playSingleBeep();
-  setTimeout(playSingleBeep, 600);
-  setTimeout(playSingleBeep, 1200);
-  setTimeout(playSingleBeep, 1800);
 };
 
 const playToggleSound = (enabled: boolean) => {
