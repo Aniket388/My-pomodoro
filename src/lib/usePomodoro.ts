@@ -84,8 +84,14 @@ const playToggleSound = (enabled: boolean) => {
 };
 
 const sendBrowserNotification = (title: string, body: string) => {
-  if ("Notification" in window && Notification.permission === "granted") {
-    new Notification(title, { body });
+  try {
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification(title, { body });
+    }
+  } catch (error) {
+    console.warn("Desktop Notification constructor blocked on mobile view:", error);
+    // This try/catch swallows the mobile browser restriction completely,
+    // stopping the unhandled crash so your screen never goes white!
   }
 };
 
@@ -141,12 +147,17 @@ if (currentState.sessionType === "FOCUS") {
     sendBrowserNotification("Focus Session Complete! 🏆", "Take some rest for 5 minutes. Go grab a water break!");
   }
 } else {
-  nextSessionType = "FOCUS";
-  sendBrowserNotification("Break Time Over! 🚀", "Focus Mode Activated. Let's lock in!");
-}
+    nextSessionType = "FOCUS";
+    sendBrowserNotification("Break Time Over! 🚀", "Focus Mode Activated. Let's lock in!");
+  }
 
-    return {
-      ...currentState,
+  // ADD THIS BLOCK RIGHT HERE TO TRIGGER YOUR WORKING CHIRP AGAIN:
+  if (isSoundEnabledRef.current) {
+    playSubtleChime();
+  }
+
+  return {
+    ...currentState,
       sessionType: nextSessionType,
       timeRemaining: DURATIONS[nextSessionType],
       focusSessionsCompleted: nextCompleted,
