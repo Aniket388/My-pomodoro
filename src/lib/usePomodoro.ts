@@ -16,34 +16,51 @@ export const DURATIONS = {
 };
 
 // Subtle Audio Context for notifications
+// ... (Your DURATIONS block above remains untouched)
+
+// Subtle Audio Context for notifications
 let audioCtx: AudioContext | null = null;
+
+const playSingleBeep = () => {
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // Base tone C5
+    osc.frequency.exponentialRampToValueAtTime(1046.50, audioCtx.currentTime + 0.4); // Slide up to high C6
+
+    gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.05); // Clean pop initialization
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5); // Fast crisp fade
+
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.5);
+  } catch (error) {
+    console.warn("Audio play blocked by background thread constraint", error);
+  }
+};
+
 const playSubtleChime = () => {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-  }
-  if (audioCtx.state === 'suspended') {
-    audioCtx.resume();
-  }
-
-  const osc = audioCtx.createOscillator();
-  const gainNode = audioCtx.createGain();
-
-  osc.type = "sine";
-  osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
-  osc.frequency.exponentialRampToValueAtTime(1046.50, audioCtx.currentTime + 0.5); // C6
-
-gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 2.5);
-gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 3.0);
-
-osc.connect(gainNode);
-gainNode.connect(audioCtx.destination);
-
-osc.start();
-osc.stop(audioCtx.currentTime + 3.0);
+  // Triggers the working beep sound 4 times sequentially with a 600ms gap
+  playSingleBeep();
+  setTimeout(playSingleBeep, 600);
+  setTimeout(playSingleBeep, 1200);
+  setTimeout(playSingleBeep, 1800);
 };
 
 const playToggleSound = (enabled: boolean) => {
+// ... (Your playToggleSound block below remains untouched)
   try {
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
