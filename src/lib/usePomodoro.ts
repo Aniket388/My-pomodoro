@@ -32,15 +32,15 @@ const playSubtleChime = () => {
   osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
   osc.frequency.exponentialRampToValueAtTime(1046.50, audioCtx.currentTime + 0.5); // C6
 
-  gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-  gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.1);
-  gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 2);
+gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 2.5);
+gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 3.0);
 
-  osc.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
+osc.connect(gainNode);
+gainNode.connect(audioCtx.destination);
 
-  osc.start();
-  osc.stop(audioCtx.currentTime + 2);
+osc.start();
+osc.stop(audioCtx.currentTime + 3.0);
 };
 
 const playToggleSound = (enabled: boolean) => {
@@ -126,23 +126,19 @@ export function usePomodoro() {
     let nextSessionType: SessionType = "FOCUS";
     let nextCompleted = currentState.focusSessionsCompleted;
 
-    if (currentState.sessionType === "FOCUS") {
-      nextCompleted += 1;
-      if (nextCompleted % 3 === 0) {
-        nextSessionType = "LONG_BREAK";
-        sendBrowserNotification("Focus session complete", "Take a 15-minute long rest.");
-      } else {
-        nextSessionType = "SHORT_BREAK";
-        sendBrowserNotification("Focus session complete", "Take a 5-minute rest.");
-      }
-    } else {
-      nextSessionType = "FOCUS";
-      sendBrowserNotification("Break time is over", "Start focusing again.");
-    }
-
-    if (isSoundEnabledRef.current) {
-      playSubtleChime();
-    }
+if (currentState.sessionType === "FOCUS") {
+  nextCompleted += 1;
+  if (nextCompleted % 3 === 0) {
+    nextSessionType = "LONG_BREAK";
+    sendBrowserNotification("Phenomenal Work! 🌟", "You completed 3 rounds! Enjoy a long 15-minute rest.");
+  } else {
+    nextSessionType = "SHORT_BREAK";
+    sendBrowserNotification("Focus Session Complete! 🏆", "Take some rest for 5 minutes. Go grab a water break!");
+  }
+} else {
+  nextSessionType = "FOCUS";
+  sendBrowserNotification("Break Time Over! 🚀", "Focus Mode Activated. Let's lock in!");
+}
 
     return {
       ...currentState,
@@ -189,7 +185,12 @@ export function usePomodoro() {
     };
   }, [state.isActive, switchSession]);
 
-  const startTimer = () => setState(s => ({ ...s, isActive: true }));
+ const startTimer = () => {
+  if ("Notification" in window && Notification.permission !== "granted") {
+    Notification.requestPermission();
+  }
+  setState(s => ({ ...s, isActive: true }));
+};
   const pauseTimer = () => setState(s => ({ ...s, isActive: false }));
   const resetTimer = () => {
     setState(s => ({
